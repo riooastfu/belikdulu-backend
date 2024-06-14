@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { prismaCLient } from "..";
+import { NotFoundException } from "../exceptions/not-found";
+import { ErrorCodes } from "../exceptions/root";
 
 export const createOrder = async (req: Request, res: Response) => {
     // 1. to create a transaction
@@ -62,13 +64,54 @@ export const createOrder = async (req: Request, res: Response) => {
 }
 
 export const listOrders = async (req: Request, res: Response) => {
-
+    const orders = await prismaCLient.order.findMany({
+        where: {
+            userId: req.user.id
+        }
+    });
+    res.json(orders);
 }
 
 export const cancelOrder = async (req: Request, res: Response) => {
 
+    // TODO::
+    // 1. wrap it inside transaction
+    // 2. check if the users is cancelling its own order
+
+    try {
+        const orders = await prismaCLient.order.update({
+            where: {
+                id: req.params.id
+            },
+            data: {
+                status: 'CANCELLED'
+            }
+        })
+        await prismaCLient.orderEvent.create({
+            data: {
+                orderId: orders.id,
+                status: 'CANCELLED'
+            }
+        })
+        res.json(orders);
+    } catch (error) {
+        throw new NotFoundException('Order not found.', ErrorCodes.ORDER_NOT_FOUND);
+    }
 }
 
 export const getOrderById = async (req: Request, res: Response) => {
-
+    try {
+        const orders = await prismaCLient.order.findFirstOrThrow({
+            where: {
+                id: req.params.id
+            },
+            include: {
+                orderProducts: true,
+                orderEvents: true
+            }
+        });
+        res.json(orders);
+    } catch (error) {
+        throw new NotFoundException('Order not found.', ErrorCodes.ORDER_NOT_FOUND);
+    }
 }
