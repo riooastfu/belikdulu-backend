@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { errorHandler } from '../error-handler';
-import { createProduct, deleteProduct, getProductById, listProduct, updateProduct } from '../controllers/products';
+import { createProduct, deleteProduct, getProductById, listProduct, searchProducts, updateProduct } from '../controllers/products';
 import authMiddleware from '../middleware/auth';
 import adminMiddleware from '../middleware/admin';
 
@@ -10,6 +10,7 @@ productsRoutes.post('/', [authMiddleware, adminMiddleware], errorHandler(createP
 productsRoutes.put('/:id', [authMiddleware, adminMiddleware], errorHandler(updateProduct));
 productsRoutes.delete('/:id', [authMiddleware, adminMiddleware], errorHandler(deleteProduct));
 productsRoutes.get('/', [authMiddleware, adminMiddleware], errorHandler(listProduct));
+productsRoutes.get('/search', [authMiddleware], errorHandler(searchProducts)); // /search?q=""
 productsRoutes.get('/:id', [authMiddleware, adminMiddleware], errorHandler(getProductById));
 
 
